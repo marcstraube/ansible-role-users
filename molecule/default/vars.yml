@@ -1,0 +1,21 @@
+---
+users_password_salt: 'mypasswordsalt'
+users_groups_list:
+  - name: 'group1'
+  - name: 'group2'
+    gid: 1200
+  - name: 'group3'
+    state: 'absent'
+users_user_list:
+  - username: 'user1'
+    password: 'password'
+  - username: 'user2'
+    uid: 1500
+    group: 'user2group'
+    gid: 1600
+    groups:
+      - 'users'
+      - 'wheel'
+    shell: '/bin/bash'
+  - username: 'user3'
+    state: 'absent'

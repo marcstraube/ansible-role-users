@@ -1,0 +1,25 @@
+---
+dependency:
+  name: 'galaxy'
+driver:
+  name: 'vagrant'
+  provider:
+    name: 'VBox'
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+platforms:
+  - name: 'archlinux'
+    box: 'archlinux/archlinux'
+    memory: 512
+    cpus: 1
+provisioner:
+  name: 'ansible'
+  config_options:
+    defaults:
+      interpreter_python: 'auto_silent'
+  inventory:
+    host_vars:
+      instance:
+        ansible_user: 'ansible'

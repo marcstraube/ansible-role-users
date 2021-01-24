@@ -1,0 +1,34 @@
+---
+- name: 'Check if users_password_salt is set'
+  ansible.builtin.fail:
+    msg: 'WARNING: Please change the default users_password_salt'
+  ignore_errors: true
+  when: 'users_password_salt == "changeme"'
+
+- name: 'Ensure correct state of groups'
+  ansible.builtin.group:
+    name: '{{ item.name }}'
+    gid: '{{ item.gid | default(omit) }}'
+    state: '{{ item.state | default("present") }}'
+  loop: '{{ users_groups_list }}'
+
+- name: 'Ensure primary groups for users exist'
+  ansible.builtin.group:
+    name: '{{ item.group | default(item.username) }}'
+    gid: '{{ item.gid | default(item.uid) | default(omit) }}'
+    state: 'present'
+  loop: '{{ users_user_list }}'
+  when: 'item.state | default("present") != "absent"'
+
+- name: 'Ensure correct state of users'
+  ansible.builtin.user:
+    name: '{{ item.username }}'
+    uid: '{{ item.uid | default(omit) }}'
+    group: '{{ item.group | default(item.username) }}'
+    groups: '{{ item.groups | default(omit) }}'
+    shell: '{{ item.shell | default(omit) }}'
+    password: >-
+      {{ item.password | password_hash('sha512', users_password_salt) if item.password is defined else '!' }}
+    update_password: '{{ item.update_password | default("always") }}'
+    state: '{{ item.state | default("present") }}'
+  loop: '{{ users_user_list }}'

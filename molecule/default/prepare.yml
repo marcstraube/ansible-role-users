@@ -1,0 +1,36 @@
+---
+- name: 'Prepare'
+  hosts: 'all'
+  become: true
+  gather_facts: false
+  vars_files:
+    - 'vars.yml'
+  tasks:
+    - name: 'Create absent groups'
+      ansible.builtin.group:
+        name: '{{ item.name }}'
+        gid: '{{ item.gid | default(omit) }}'
+        state: 'present'
+      loop: '{{ users_groups_list }}'
+      when: 'item.state | default("present") == "absent"'
+
+    - name: 'Create user groups of absent users'
+      ansible.builtin.group:
+        name: '{{ item.group | default(item.username) }}'
+        gid: '{{ item.gid | default(item.uid) | default(omit) }}'
+        state: 'present'
+      loop: '{{ users_user_list }}'
+      when: 'item.state | default("present") == "absent"'
+
+    - name: 'Create absent users'
+      ansible.builtin.user:
+        name: '{{ item.username }}'
+        uid: '{{ item.uid | default(omit) }}'
+        group: '{{ item.group | default(item.username) }}'
+        groups: '{{ item.groups | default(omit) }}'
+        shell: '{{ item.shell | default(omit) }}'
+        password: >-
+          {{ item.password | password_hash('sha512', users_password_salt) if item.password is defined else '!' }}
+        state: 'present'
+      loop: '{{ users_user_list }}'
+      when: 'item.state | default("present") == "absent"'
